@@ -26,7 +26,6 @@ const injected = new InjectedConnector({
     137,
     56,
     43114,
-    250,
     137,
     25,
     42161,

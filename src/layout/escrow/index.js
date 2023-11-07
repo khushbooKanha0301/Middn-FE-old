@@ -10,6 +10,10 @@ import { userDetails } from "../../store/slices/AuthSlice";
 
 let PageSize = 5;
 
+function capitalizeFirstLetter(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 const data = [
   {
     value: 1,
@@ -58,7 +62,6 @@ const data = [
   },
 ];
 export const Escrow = () => {
-  
   const [selectedOptionAny, setSelectedOptionAny] = useState(data[0]);
   const [selectedOptionBTC, setSelectedOptionBTC] = useState(data[1]);
   const [selectedOptionAnywhere, setSelectedOptionAnywhere] = useState(data[2]);
@@ -71,9 +74,7 @@ export const Escrow = () => {
   const getAllEscrow = async () => {
     if (currentPage) {
       await jwtAxios
-        .get(
-          `/escrows/getAllEscrows?page=${currentPage}&pageSize=${PageSize}`
-        )
+        .get(`/escrows/getAllEscrows?page=${currentPage}&pageSize=${PageSize}`)
         .then((res) => {
           setEscrowLoading(false);
           setEscrow(res.data?.data);
@@ -88,7 +89,6 @@ export const Escrow = () => {
   useEffect(() => {
     getAllEscrow();
   }, [currentPage, acAddress.authToken]);
-  
 
   const handleChangeAny = (e) => {
     setSelectedOptionAny(e);
@@ -220,15 +220,20 @@ export const Escrow = () => {
               <div className="escrow-network">Network</div>
             </div>
             {escrows?.map((escrow) => (
-              <div
-                className="flex-table-body escrowListBody"
-                key={escrow._id}
-              >
-                <div className="escrow-price">
-                  15.4 ETH <span>Buy Limit 0.1-0.6 BTC</span>
-                </div>
+              <div className="flex-table-body escrowListBody" key={escrow._id}>
+                {escrow && escrow.price_type === "fixed" && (
+                  <div className="escrow-price">
+                    {escrow.fixed_price} USD<span>Buy Limit 0.1-0.6 BTC</span>{" "}
+                  </div>
+                )}
+                {escrow && escrow.price_type === "flexible" && (
+                  <div className="escrow-price">
+                    {capitalizeFirstLetter(escrow.price_type)}
+                    <span>Buy Limit 0.1-0.6 BTC</span>{" "}
+                  </div>
+                )}
                 <div className="escrow-title d-flex justify-content-center align-items-center">
-               {escrow.object}
+                  {escrow.object}
                 </div>
                 <div className="escrow-payment d-flex justify-content-center align-items-center">
                   <img
@@ -238,52 +243,63 @@ export const Escrow = () => {
                   <span className="ms-2"> Ethereum </span>
                 </div>
                 <div className="escrow-time d-flex justify-content-center">
-                 {escrow.time_constraints}
+                  {escrow.time_constraints}
                 </div>
                 <div className="escrow-trader d-flex align-items-center justify-content-center">
                   <div className="d-flex align-items-center">
                     <div className="chat-image">
-                       <img
+                      <img
                         src={
                           escrow?.newImage
                             ? escrow?.newImage
                             : require("../../content/images/avatar.png")
                         }
-                        alt={
-                          escrow?.newImage
-                            ?  escrow?.newImage
-                            : "No Profile"
-                        }
+                        alt={escrow?.newImage ? escrow?.newImage : "No Profile"}
                       />
                       <span className="circle"></span>
                     </div>
                     <div className="content ms-3">
-                      <h6>{escrow.user_name ? escrow.user_name : 'John doe'}</h6>
+                      <h6>
+                        {escrow.user_name ? escrow.user_name : "John doe"}
+                      </h6>
                       <span>(100%, 500+)</span>
                     </div>
                   </div>
                 </div>
                 <div className="escrow-actions text-center d-flex justify-content-center">
-                  <Button variant="primary">Buy</Button>
+                  <div className="actions profile-action text-center">
+                    {escrow && escrow.escrow_type === "buyer" && (
+                      <Button variant="primary">Sell</Button>
+                    )}
+                    {escrow && escrow.escrow_type === "seller" && (
+                      <Button variant="primary">Buy</Button>
+                    )}
+                  </div>
                 </div>
                 <div className="escrow-network">Binance Smart Chain</div>
               </div>
             ))}
-            {totalEscrowCount === 0  && escrowLoading === false && (
+            {totalEscrowCount === 0 && escrowLoading === false && (
               <div className="flex-table-body no-records justify-content-between">
                 <div className="no-records-text">
                   <div className="no-record-label">No Records</div>
                   <p>You haven't made any transaction</p>
                 </div>
                 <div className="actions profile-action text-center">
-                  <Button variant="primary">Create</Button>
+                  <Button
+                    variant="primary"
+                    onClick={createEscrowModalToggle}
+                    type="button"
+                  >
+                    Create
+                  </Button>
                 </div>
               </div>
             )}
           </div>
         </div>
       </div>
-      {totalEscrowCount !== 0  && escrowLoading === false && (
+      {totalEscrowCount !== 0 && escrowLoading === false && (
         <div className="d-flex justify-content-between align-items-center table-pagination">
           <PaginationComponent
             className="pagination-bar"

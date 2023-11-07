@@ -41,19 +41,22 @@ export const LoginView = (props) => {
     const connectWalletOnPageLoad = async () => {
       let storageProvider = window.localStorage.getItem("provider");
       let provider = null;
+      let metaAccounts;
       if (storageProvider == "injected") {
-        provider = window.ethereum.providers.find(
-          (provider) => provider.isMetaMask
-        );
+        if (window.ethereum && !window.ethereum.providers) {
+          metaAccounts = await window.ethereum.request({
+            method: "eth_accounts",
+          });
+        } else {
+          provider = window.ethereum.providers.find(
+            (provider) => provider.isMetaMask
+          );
+          metaAccounts = await provider.request({ method: "eth_accounts" });
+        }
       }
       if (storageProvider == "coinbaseWallet") {
         await activateInjectedProvider("coinbaseWallet");
       }
-
-      if (!provider) {
-        return false;
-      }
-      let metaAccounts = await provider.request({ method: "eth_accounts" });
       if (
         !metaAccounts ||
         metaAccounts[0] != userData?.account?.toLowerCase()
@@ -78,11 +81,16 @@ export const LoginView = (props) => {
 
   useEffect(() => {
     const listenEventOnProvider = async () => {
-      var metamaskProvider = await window.ethereum.providers.find(
-        (provider) => provider.isMetaMask
-      );
+      let metamaskProvider;
 
-      var handleAccountsChangedOnMetaMask = async (accounts) => {
+      if (window.ethereum && !window.ethereum.providers) {
+        metamaskProvider = window.ethereum;
+      } else {
+        metamaskProvider = window.ethereum.providers.find(
+          (provider) => provider.isMetaMask
+        );
+      }
+      let handleAccountsChangedOnMetaMask = async (accounts) => {
         if (accounts.length) {
           await activateInjectedProvider("injected");
           await activate(web3Connectors.injected);
@@ -171,10 +179,16 @@ export const LoginView = (props) => {
   }, [accountAddress]);
 
   const setCoinbaseEvent = async () => {
-    var coinbaseProvider = await window.ethereum.providers.find(
-      (provider) => provider.isCoinbaseWallet
-    );
-    var handleAccountsChangedOnCoinbase = async (accounts) => {
+    let coinbaseProvider;
+
+    if (window.ethereum && !window.ethereum.providers) {
+      coinbaseProvider = window.ethereum;
+    } else {
+      coinbaseProvider = window.ethereum.providers.find(
+        (provider) => provider.isCoinbaseWallet
+      );
+    }
+    let handleAccountsChangedOnCoinbase = async (accounts) => {
       if (accounts.length) {
         await activateInjectedProvider("coinbaseWallet");
         await connect({ connector: wagmiConnector[1] });
@@ -192,15 +206,19 @@ export const LoginView = (props) => {
       if (userData.account && userData.account != "Connect Wallet") {
         let storageProvider = window.localStorage.getItem("provider");
         let provider = null;
+        let metaAccounts;
         if (storageProvider == "injected") {
-          provider = window.ethereum.providers.find(
-            (provider) => provider.isMetaMask
-          );
+          if (window.ethereum && !window.ethereum.providers) {
+            metaAccounts = await window.ethereum.request({
+              method: "eth_accounts",
+            });
+          } else {
+            provider = window.ethereum.providers.find(
+              (provider) => provider.isMetaMask
+            );
+            metaAccounts = await provider.request({ method: "eth_accounts" });
+          }
         }
-        if (!provider) {
-          return false;
-        }
-        let metaAccounts = await provider.request({ method: "eth_accounts" });
         if (
           !metaAccounts ||
           metaAccounts[0] != userData.account.toLowerCase()
@@ -372,10 +390,16 @@ export const LoginView = (props) => {
         break;
 
       case "meta_mask":
-        let provider = window.ethereum.providers.find(
-          (provider) => provider.isMetaMask
-        );
-        const currentChainId = Web3.utils.hexToNumber(provider.chainId);
+        let provider;
+        let currentChainId;
+        if (window.ethereum && !window.ethereum.providers) {
+          currentChainId = Web3.utils.hexToNumber(window.ethereum.chainId);
+        } else {
+          provider = window.ethereum.providers.find(
+            (provider) => provider.isMetaMask
+          );
+          currentChainId = Web3.utils.hexToNumber(provider.chainId);
+        }
         const isChainSupported = await isChainIdSupported(currentChainId);
 
         if (!isChainSupported) {

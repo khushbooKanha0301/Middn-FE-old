@@ -4884,6 +4884,65 @@ aside.EmojiPickerReact.epr-main {
             }
         }
 
+        .price {
+            font-size: 20px;
+            text-align: center;
+
+            span {
+                color: rgba(255, 255, 255, 0.50);
+                font-size: 13px;
+                display: inline-block;
+                width: 100%;
+            }
+        }
+
+        .trader {
+            .chat-image {
+                height: 62px;
+                width: 62px;
+                border-radius: 50%;
+                position: relative;
+
+                img {
+                    height: 100%;
+                    width: 100%;
+                    object-fit: cover;
+                }
+
+                span.circle {
+                    height: 16px;
+                    width: 16px;
+                    background-color: #7FBA7A;
+                    border: 3px solid #fff;
+                    display: inline-block;
+                    border-radius: 50%;
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                }
+            }
+
+            .content {
+                h6 {
+                    font-family: Eudoxus Sans;
+                    font-size: 13px;
+                    font-style: normal;
+                    font-weight: 700;
+                    line-height: 18px;
+                    margin: 0;
+                }
+
+                span {
+                    font-family: Eudoxus Sans;
+                    font-size: 12px;
+                    font-style: normal;
+                    font-weight: 500;
+                    line-height: 16px;
+                    color: #808191;
+                }
+            }
+        }
+
         .escrow-network {
             word-break: break-word;
         }
