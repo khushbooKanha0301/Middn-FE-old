@@ -1,12 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Modal, Row, Col, Form, Button } from "react-bootstrap";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   notificationFail,
   notificationSuccess,
 } from "../../store/slices/notificationSlice";
 import { useDispatch } from "react-redux";
 import jwtAxios from "../../service/jwtAxios";
+import { useSelector } from "react-redux";
+import { userDetails } from "../../store/slices/AuthSlice";
 
 export const EditEscrowView = (props) => {
   const [step, setStep] = useState(1);
@@ -16,18 +18,18 @@ export const EditEscrowView = (props) => {
   const [priceType, setPriceType] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-  const [category, setCategory] = useState("high_value_items");
-  const [object, setObject] = useState("jewelery");
+  const [category, setCategory] = useState("");
+  const [object, setObject] = useState("");
   const [description, setDescription] = useState(null);
-  const [processTime, setProcessTime] = useState("24_hours");
+  const [processTime, setProcessTime] = useState("");
   const [escrowNumber, setEscrowNumber] = useState(null);
+  const [escrows, setEscrow] = useState(null);
+  const acAddress = useSelector(userDetails);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const handleNext = () => {
-    if (step === 1 && !escrowType) {
-      dispatch(notificationFail("Please select Buyer or Seller."));
-    } else if (step === 2) {
+    if (step === 1) {
       if (priceType == "") {
         dispatch(notificationFail("Please add Fixed or Flexible Price"));
       } else {
@@ -131,18 +133,6 @@ export const EditEscrowView = (props) => {
     }
   };
 
-  useEffect(() => {
-    if (props.show) {
-      setEscrowType(null);
-      setPrice("");
-      setPriceType("");
-      setMinPrice("");
-      setMaxPrice("");
-      setDescription("");
-      setEscrowNumber(null);
-    }
-  }, [props.show]);
-
   function copyToClipboard(e) {
     escrowLinkRef.current.select();
     document.execCommand("copy");
@@ -165,7 +155,7 @@ export const EditEscrowView = (props) => {
       processTime,
     };
     await jwtAxios
-      .post(`/escrows/createEscrow`, reqData)
+      .put(`/escrows/editEscrow/${props.id}`, reqData)
       .then((escrowResult) => {
         if (escrowResult?.data?.data?.escrow_number) {
           setEscrowNumber(escrowResult?.data?.data?.escrow_number);
@@ -197,6 +187,33 @@ export const EditEscrowView = (props) => {
     navigate("/");
   };
 
+  useEffect(() => {
+    if (props.show) {
+      setEscrowType(escrows?.escrow_type ? escrows?.escrow_type : "");
+      setPrice(escrows?.fixed_price ? escrows?.fixed_price : "");
+      setPriceType("fixed");
+      setMinPrice(escrows?.flex_min_price ? escrows?.flex_min_price : "");
+      setMaxPrice(escrows?.flex_max_price ? escrows?.flex_max_price : "");
+      setCategory(escrows?.category ? escrows?.category : "high_value_items");
+      setObject(escrows?.object ? escrows?.object : "jwellery");
+      setDescription(escrows?.description ? escrows?.description : "");
+      setProcessTime(
+        escrows?.time_constraints ? escrows?.time_constraints : "24 Hours"
+      );
+    }
+  }, [props.show]);
+
+  useEffect(() => {
+    jwtAxios
+      .get(`/escrows/getEscrowsById/${props.id}`)
+      .then((res) => {
+        setEscrow(res.data?.data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, [acAddress.authToken]);
+
   return (
     <Modal
       {...props}
@@ -208,58 +225,7 @@ export const EditEscrowView = (props) => {
       centered
     >
       <Form onSubmit={formSubmitHandler}>
-        {step === 1 && (
-          <>
-            <Modal.Header>
-              <Modal.Title>Create escrow</Modal.Title>
-            </Modal.Header>
-            <Modal.Body className="pt-3">
-              <p className="mb-4">
-                Define yourself, are you a buyer or a seller?
-              </p>
-              <Form.Group
-                controlId="escrowType"
-                onChange={(e) => inputChangeHandler(e)}
-              >
-                <Row>
-                  <Col md="6">
-                    <Form.Check
-                      className="yourself-option"
-                      label="Buyer"
-                      name="radiooption"
-                      type="radio"
-                      id="radiooption1"
-                      checked={escrowType === "buyer"}
-                      value={"buyer"}
-                      readOnly
-                    />
-                  </Col>
-                  <Col md="6">
-                    <Form.Check
-                      className="yourself-option"
-                      label="Seller"
-                      name="radiooption"
-                      type="radio"
-                      id="radiooption2"
-                      checked={escrowType === "seller"}
-                      value={"seller"}
-                      readOnly
-                    />
-                  </Col>
-                </Row>
-              </Form.Group>
-              <div className="form-action-group">
-                <Button variant="primary" onClick={handleNext}>
-                  Continue
-                </Button>
-                <Button variant="secondary" onClick={props.onHide}>
-                  Cancel
-                </Button>
-              </div>
-            </Modal.Body>
-          </>
-        )}
-        {step === 2 && (
+        {step === 1 && escrows && (
           <>
             <Modal.Header>
               <Modal.Title>
@@ -333,14 +299,14 @@ export const EditEscrowView = (props) => {
                 <Button variant="primary" onClick={handleNext}>
                   Continue
                 </Button>
-                <Button variant="secondary" onClick={handleBack}>
-                  Back
+                <Button variant="secondary" onClick={props.onHide}>
+                  Cancel
                 </Button>
               </div>
             </Modal.Body>
           </>
         )}
-        {step === 3 && (
+        {step === 2 && (
           <>
             <Modal.Header>
               <Modal.Title>Detail</Modal.Title>
@@ -359,6 +325,7 @@ export const EditEscrowView = (props) => {
                       name="category"
                       aria-label="High-value items"
                       onChange={inputChangeHandler}
+                      value={category}
                     >
                       <option value="high_value_items">High-value items</option>
                     </Form.Select>
@@ -371,6 +338,7 @@ export const EditEscrowView = (props) => {
                       name="object"
                       aria-label="Jewelery"
                       onChange={inputChangeHandler}
+                      value={object}
                     >
                       <option value="jewelery">Jewelery</option>
                     </Form.Select>
@@ -394,13 +362,14 @@ export const EditEscrowView = (props) => {
                   aria-label="24 Hours"
                   name="processTime"
                   onChange={inputChangeHandler}
+                  value={processTime}
                 >
                   <option value="24_hours">24 Hours</option>
                 </Form.Select>
               </Form.Group>
               <div className="form-action-group">
                 <Button variant="primary" onClick={submitHandler}>
-                  Create
+                  Update
                 </Button>
                 <Button variant="secondary" onClick={handleBack}>
                   Back
@@ -409,14 +378,14 @@ export const EditEscrowView = (props) => {
             </Modal.Body>
           </>
         )}
-        {step === 4 && (
+        {step === 3 && (
           <>
             <Modal.Header>
-              <Modal.Title>Escrow has been created</Modal.Title>
+              <Modal.Title>Escrow has been Updated</Modal.Title>
             </Modal.Header>
             <Modal.Body className="pt-2">
               <p className="mb-4">
-                Your secure link has been created, share it with your buyer to
+                Your secure link has been Updated, share it with your buyer to
                 start trading with the decentralized escrow.
               </p>
               <Form.Group className="form-group">
