@@ -24,6 +24,7 @@ import { onValue, ref } from "firebase/database";
 import ReviewTransactionView from "../../component/ReviewTransaction";
 import PaginationComponent from "../../component/Pagination";
 import CreateEscrowView from "../../layout/escrow/CreateEscrow";
+import { Link } from "react-router-dom";
 function capitalizeFirstLetter(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
@@ -63,6 +64,7 @@ export const TraderProfile = (props) => {
   const [activeEscrows, setActiveEscrows] = useState([]);
   const [totalActiveEscrowCount, setTotalActiveEscrowCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+  
   let PageSize = 5;
 
   const getActiveEscrows = async () => {
@@ -429,11 +431,20 @@ export const TraderProfile = (props) => {
                     </div>
                   </div>
                   <div className="actions profile-action text-center">
-                    {escrow && escrow.escrow_type === "buyer" && (
-                      <Button variant="primary">Sell</Button>
-                    )}
-                    {escrow && escrow.escrow_type === "seller" && (
-                      <Button variant="primary">Buy</Button>
+                    {userData && userData.account === escrow.user_address ? (
+                      <Link className="action" to={`/escrow-details/${escrow._id}`}>
+                           <Button variant="primary">Details</Button>
+                      </Link>
+                    ) : (
+                      escrow && escrow.escrow_type === "buyer" ? (
+                        <Link className="action" to={`/escrow-buy-sell/${escrow._id}`}>
+                          <Button variant="primary">Sell</Button>
+                        </Link>
+                      ) : (
+                        <Link className="action" to={`/escrow-buy-sell/${escrow._id}`}>
+                          <Button variant="primary">Buy</Button>
+                        </Link>
+                      )
                     )}
                   </div>
                 </div>

@@ -16,13 +16,14 @@ import NotificationComponent from "./layout/NotificationComponent";
 import TraderProfileComponent from "./layout/TraderProfileComponent";
 import ChatComponent from "./layout/ChatComponent";
 import EscrowComponent from "./layout/EscrowComponent";
+import EscrowDetails from "./layout/escrow/EscrowDetails";
+import EscrowBuySell from "./layout/escrow/EscrowBuySell";
 import TradeHistoryComponent from "./layout/TradeHistoryComponent";
 import HelpCenterComponent from "./layout/HelpCenterComponent";
 import ProtectedRoute from "./PrivateRoute";
 import { useDispatch, useSelector } from "react-redux";
 import {
   getCountryDetails,
-  getCountryName,
   logoutAuth,
   userDetails,
   userGetData,
@@ -194,6 +195,8 @@ export const App = () => {
                 }
               />
               <Route path="/notification" element={<NotificationComponent />} />
+              <Route path="/escrow-details/:id" element={<EscrowDetails />} />  
+              <Route path="/escrow-buy-sell/:id" element={<EscrowBuySell />} />  
               <Route
                 path="/profile/:address"
                 element={

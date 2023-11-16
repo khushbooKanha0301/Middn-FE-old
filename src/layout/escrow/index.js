@@ -7,7 +7,7 @@ import jwtAxios from "../../service/jwtAxios";
 import PaginationComponent from "../../component/Pagination";
 import { useSelector } from "react-redux";
 import { userDetails } from "../../store/slices/AuthSlice";
-
+import { Link } from "react-router-dom";
 let PageSize = 5;
 
 function capitalizeFirstLetter(str) {
@@ -70,6 +70,8 @@ export const Escrow = () => {
   const [escrowLoading, setEscrowLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const acAddress = useSelector(userDetails);
+  const userData = useSelector(userDetails);
+  console.log("userData ", userData.account);
 
   const getAllEscrow = async () => {
     if (currentPage) {
@@ -268,12 +270,22 @@ export const Escrow = () => {
                 </div>
                 <div className="escrow-actions text-center d-flex justify-content-center">
                   <div className="actions profile-action text-center">
-                    {escrow && escrow.escrow_type === "buyer" && (
-                      <Button variant="primary">Sell</Button>
+                    {userData && userData.account === escrow.user_address ? (
+                      <Link className="action" to={`/escrow-details/${escrow._id}`}>
+                        <Button variant="primary">Details</Button>
+                      </Link>
+                    ) : (
+                      escrow && escrow.escrow_type === "buyer" ? (
+                        <Link className="action" to={`/escrow-buy-sell/${escrow._id}`}>
+                          <Button variant="primary">Sell</Button>
+                        </Link>
+                      ) : (
+                        <Link className="action" to={`/escrow-buy-sell/${escrow._id}`}>
+                          <Button variant="primary">Buy</Button>
+                        </Link>
+                      )
                     )}
-                    {escrow && escrow.escrow_type === "seller" && (
-                      <Button variant="primary">Buy</Button>
-                    )}
+                   
                   </div>
                 </div>
                 <div className="escrow-network">Binance Smart Chain</div>
