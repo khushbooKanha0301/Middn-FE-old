@@ -4,11 +4,10 @@ import { countryInfo } from "../accountSetting/countryData";
 import { useDispatch } from "react-redux";
 import { defineCurrency } from "../../store/slices/countrySettingSlice";
 import { useParams } from "react-router-dom";
-import Swal from "sweetalert2/src/sweetalert2.js";
 import jwtAxios from "../../service/jwtAxios";
 import { useSelector } from "react-redux";
 import { userDetails } from "../../store/slices/AuthSlice";
-
+import { useNavigate } from 'react-router-dom';
 function EscrowDetails() {
   const dispatch = useDispatch();
   const [countryCallingCode, setCountryCallingCode] = useState("");
@@ -16,7 +15,8 @@ function EscrowDetails() {
   const [escrows, setEscrow] = useState(null);
   const acAddress = useSelector(userDetails);
   const { id } = useParams();
-
+  const navigate = useNavigate();
+  
   const onChange = (e) => {
     // } else if (e.target.name === "currentPre") {
     //   setCurrentPre(e.target.value);
@@ -31,6 +31,10 @@ function EscrowDetails() {
     );
     return result?.flag;
   };
+  
+  const handleButtonClick = (address) => {
+    navigate('/escrow-offer-buy', { state: {userAddress: address} });
+  };
 
   useEffect(() => {
     jwtAxios
@@ -42,6 +46,8 @@ function EscrowDetails() {
         console.log(err);
       });
   }, [acAddress.authToken]);
+
+
 
   return (
     <div className="escrow-details">
@@ -219,9 +225,9 @@ function EscrowDetails() {
               </div>
 
               <div className="edit-btn ">
-                <Button className="btn btn-success btn-width" variant="success">
-                  Submit
-                </Button>
+                  <Button className="btn btn-success btn-width" variant="success" onClick={() => handleButtonClick(escrows?.user_address)}>
+                    Submit
+                  </Button>
               </div>
             </Col>
           </Row>

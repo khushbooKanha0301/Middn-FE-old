@@ -71,7 +71,6 @@ export const Escrow = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const acAddress = useSelector(userDetails);
   const userData = useSelector(userDetails);
-  console.log("userData ", userData.account);
 
   const getAllEscrow = async () => {
     if (currentPage) {

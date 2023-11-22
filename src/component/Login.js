@@ -37,12 +37,24 @@ export const LoginView = (props) => {
   const setProvider = (type) => {
     window.localStorage.setItem("provider", type);
   };
+
   useEffect(() => {
     const connectWalletOnPageLoad = async () => {
       let storageProvider = window.localStorage.getItem("provider");
+      console.log("storageProvider ", storageProvider);
       let provider = null;
       let metaAccounts;
+      if (!ethereum?.providers) {
+        return undefined;
+      }
       if (storageProvider == "injected") {
+        if (!window.ethereum) {
+          dispatch(
+            notificationFail("Please Install Meta Mask in Your system ")
+          );
+          return false;
+        }
+
         if (window.ethereum && !window.ethereum.providers) {
           metaAccounts = await window.ethereum.request({
             method: "eth_accounts",
@@ -54,8 +66,13 @@ export const LoginView = (props) => {
           metaAccounts = await provider.request({ method: "eth_accounts" });
         }
       }
+
+
       if (storageProvider == "coinbaseWallet") {
         await activateInjectedProvider("coinbaseWallet");
+      }
+      if (!provider) {
+        return false;
       }
       if (
         !metaAccounts ||
@@ -82,7 +99,10 @@ export const LoginView = (props) => {
   useEffect(() => {
     const listenEventOnProvider = async () => {
       let metamaskProvider;
-
+      if (!window.ethereum) {
+        return undefined;
+      }
+      
       if (window.ethereum && !window.ethereum.providers) {
         metamaskProvider = window.ethereum;
       } else {
@@ -123,6 +143,7 @@ export const LoginView = (props) => {
     const checkIfWalletIsConnected = async () => {
       try {
         const accounts = await ethereum.request({ method: "eth_accounts" });
+        //console.log("accounts checkIfWalletIsConnected", accounts);
 
         if (accounts !== 0) {
           let account = accounts[0]
@@ -139,6 +160,7 @@ export const LoginView = (props) => {
       checkIfWalletIsConnected();
     }
   }, [ethereum, userData.authToken, userData.address]);
+
   useEffect(() => {
     if (chainId) {
       SetUserChainId(chainId);
@@ -150,6 +172,7 @@ export const LoginView = (props) => {
         setNewChainId(Web3.utils.hexToNumber(networkId));
       }
     });
+
   useEffect(() => {
     const checkChain = async () => {
       if (newChainId) {
@@ -205,8 +228,11 @@ export const LoginView = (props) => {
     const checkMetaAcc = async () => {
       if (userData.account && userData.account != "Connect Wallet") {
         let storageProvider = window.localStorage.getItem("provider");
-        let provider = null;
+          let provider = null;
         let metaAccounts;
+        if (!window.ethereum) {
+          return undefined;
+        }
         if (storageProvider == "injected") {
           if (window.ethereum && !window.ethereum.providers) {
             metaAccounts = await window.ethereum.request({
@@ -219,10 +245,16 @@ export const LoginView = (props) => {
             metaAccounts = await provider.request({ method: "eth_accounts" });
           }
         }
+
+        if (!provider) {
+          return false;
+        }
+
         if (
           !metaAccounts ||
           metaAccounts[0] != userData.account.toLowerCase()
         ) {
+          //console.log("logout")
           await disconnect();
           props.setTwoFAModal(false);
           dispatch(notificationSuccess("User logout successfully !"));
@@ -348,23 +380,23 @@ export const LoginView = (props) => {
   }, [address, userData?.account]);
 
   const activateInjectedProvider = async (providerName) => {
-    if (!ethereum?.providers) {
+    if (!window.ethereum) {
       return undefined;
     }
-
     let provider;
     switch (providerName) {
       case "coinbaseWallet":
+        
         provider = ethereum.providers.find(
           ({ isCoinbaseWallet }) => isCoinbaseWallet
         );
         provider.disableReloadOnDisconnect();
         break;
+
       case "injected":
         provider = ethereum.providers.find(({ isMetaMask }) => isMetaMask);
         break;
     }
-
     if (provider) {
       ethereum.setSelectedProvider(provider);
     }
@@ -392,13 +424,22 @@ export const LoginView = (props) => {
       case "meta_mask":
         let provider;
         let currentChainId;
+        if (!window.ethereum) {
+          dispatch(
+            notificationFail("Please Install Meta Mask in Your system ")
+          );
+          return false;
+        }
+
         if (window.ethereum && !window.ethereum.providers) {
           currentChainId = Web3.utils.hexToNumber(window.ethereum.chainId);
+          console.log("currentChainId ", currentChainId);
         } else {
           provider = window.ethereum.providers.find(
             (provider) => provider.isMetaMask
           );
           currentChainId = Web3.utils.hexToNumber(provider.chainId);
+          console.log("currentChainId ", currentChainId);
         }
         const isChainSupported = await isChainIdSupported(currentChainId);
 
@@ -416,7 +457,10 @@ export const LoginView = (props) => {
         setProvider("injected");
         break;
       case "coinbase_wallet":
-        await connect({ connector: wagmiConnector[1] });
+        if (!window.ethereum) {
+          return undefined;
+        }
+        connect({ connector: wagmiConnector[1] });
         setProvider("coinbaseWallet");
         break;
 
